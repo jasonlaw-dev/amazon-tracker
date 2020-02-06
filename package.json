@@ -1,0 +1,25 @@
+{
+  "name": "amazon-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-notifier": "^6.0.0",
+    "p-queue": "^6.2.1",
+    "puppeteer-core": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^13.7.0",
+    "@types/node-notifier": "^5.4.0",
+    "@types/p-queue": "^3.2.1",
+    "@types/puppeteer-core": "^2.0.0",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.7.5"
+  }
+}
