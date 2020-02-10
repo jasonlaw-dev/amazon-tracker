@@ -1,6 +1,8 @@
 import { Page } from 'puppeteer-core';
+import { AmazonCart } from './amazon-cart';
 import { AmazonPageType } from './amazon-page-type';
 import { AmazonProduct } from './amazon-product';
+import { sleep } from './sleep';
 
 export class AmazonPage {
 
@@ -8,6 +10,15 @@ export class AmazonPage {
 
   constructor(public product: AmazonProduct, public page: Page) {
     page.setDefaultTimeout(1000 * 30);
+    page.setCacheEnabled(false);
+    page.setRequestInterception(true);
+    page.on('request', interceptedRequest => {
+      if (interceptedRequest.resourceType() === 'image') {
+        interceptedRequest.abort();
+      } else {
+        interceptedRequest.continue();
+      } 
+    });
   }
 
   get offerListingUrl() {
@@ -26,14 +37,27 @@ export class AmazonPage {
     } else {
       this.currentPageType = AmazonPageType.Offer_Listing;
     }
-    return this.hasInventory();
+    if (await this.hasInventory()) {
+      this.addToCart();
+      return true;
+    }
+    return false;
   }
 
+  private async addToCart() {
+    if (this.currentPageType === AmazonPageType.Offer_Listing) {
+      await this.page.click('.a-button-input');
+    } else {
+      await this.page.click('#add-to-cart-button');
+    }
+    await sleep(500);
+    await this.page.goto(AmazonCart.url);
+  }
 
   private async hasInventory(): Promise<boolean> {
     const url = this.currentPageType === AmazonPageType.Offer_Listing ? this.offerListingUrl : this.productUrl;
     const navigationFinished = this.page.waitForNavigation({ waitUntil: 'networkidle2' });
-    await this.page.goto(url, { waitUntil: 'networkidle2' });
+    await this.page.goto(url, { waitUntil: 'domcontentloaded' });
 
     if (this.currentPageType === AmazonPageType.Offer_Listing) {
       await Promise.race([navigationFinished, this.page.waitForSelector('.olpSellerName')]);
